@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebP Decoder</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo="> <!-- 使用一个空的图标 -->
+</head>
+<body>
+  <script type="module">
+    import Module from './webp_dec.js'; //从 webp_dec.js 文件中导入 Module
+    async function loadFile(src) {  //异步函数 loadFile
+      const resp = await fetch(src);
+      return await resp.arrayBuffer();  //将响应转换为 ArrayBuffer（通用的、固定长度的原始二进制数据缓冲区）
+    }
+
+    Module().then(async module => { //调用 Module 函数，返回一个解析为 WebAssembly 模块实例
+      console.log('Version:', module.version().toString(16)); //以十六进制格式记录模块的版本
+      const image = await loadFile('./example.webp');  // webp图片的路径
+      const imageData = module.decode(image);
+      if (!imageData) { //检查 imageData 是否为空或未定义
+        throw new Error('Image data is null or undefined');
+      }
+      const canvas = document.createElement('canvas');  //创建一个画布元素
+      canvas.width = imageData.width;
+      canvas.height = imageData.height;
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+      ctx.putImageData(imageData, 0, 0);
+    }).catch(error => {
+      console.error('Error loading WebAssembly module:', error);
+    });
+  </script>
+</body>
+</html>
